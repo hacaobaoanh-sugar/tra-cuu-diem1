@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra Cứu Kết Quả Học Tập</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 15px; background-color: #f4f6f9; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h2 { color: #0056b3; text-align: center; font-size: 22px; margin-top: 10px; margin-bottom: 20px; }
+		h1 { color: #0056b3; text-align: center; font-size: 30px; margin-top: 15px; margin-bottom: 25px; }
+        
+        /* Khung tìm kiếm */
+        .search-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        #searchInput { width: 100%; padding: 12px 15px; font-size: 16px; border: 2px solid #007bff; border-radius: 8px; outline: none; -webkit-appearance: none; }
+        .search-container button { width: 100%; padding: 12px; font-size: 16px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        .search-container button:hover { background-color: #0056b3; }
+        
+        /* Hiển thị kết quả dạng Thẻ (Card) tối ưu cho Mobile */
+        .result-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); padding: 15px; margin-top: 15px; display: none; border-top: 4px solid #007bff; }
+        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 15px; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-weight: 600; color: #555; text-align: left; padding-right: 10px; }
+        .info-value { font-weight: bold; color: #000; text-align: right; }
+        
+        /* Đổi màu nổi bật cho các dòng điểm số chính */
+        .info-row:nth-child(1) .info-value, .info-row:nth-child(2) .info-value { color: #0056b3; } /* Tên và lớp màu xanh */
+        .info-row:last-child .info-value { color: #dc3545; font-size: 18px; } /* Điểm trung bình màu đỏ to hơn */
+
+        /* Trạng thái */
+        .status-msg { text-align: center; font-size: 15px; margin-top: 20px; font-weight: bold; padding: 10px; border-radius: 8px; }
+        .error { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .loading { color: #007bff; background-color: #cce5ff; border: 1px solid #b8daff; }
+
+        /* Giao diện máy tính bảng/máy tính (Ngang) */
+        @media (min-width: 480px) {
+            .search-container { flex-direction: row; }
+            .search-container button { width: auto; min-width: 120px; }
+            h2 { font-size: 26px; }
+            .result-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+		<h1>TRƯỜNG THCS TRẦN BÌNH TRỌNG - PHƯỜNG HÒA THÀNH</h1>
+        <h2>🔍 HỆ THỐNG TRA CỨU ĐIỂM</h2>
+        
+        <div class="search-container">
+            <input type="text" id="searchInput" inputmode="text" enterkeyhint="search" onkeydown="if(event.key === 'Enter') performSearch()" placeholder="Nhập chính xác mã định danh...">
+            <button onclick="performSearch()">Tìm kiếm</button>
+        </div>
+
+        <div id="status"></div>
+        <div class="result-card" id="outputCard"></div>
+    </div>
+
+    <script>
+        // ĐIỀN ĐƯỜNG LINK URL GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY:
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxyHuAk1y6Mm25xTCh5Gy11KsQRDVgCvkt-6sTDh2NxXYHZlXmEiykydvOfKkbu5BSH/exec"; 
+
+        function performSearch() {
+            const query = document.getElementById("searchInput").value.trim();
+            const statusDiv = document.getElementById("status");
+            const cardDiv = document.getElementById("outputCard");
+
+            // Ẩn thẻ kết quả trước đó
+            cardDiv.style.display = "none";
+            cardDiv.innerHTML = "";
+
+            if (!query) {
+                statusDiv.innerHTML = '<div class="status-msg error">Vui lòng nhập mã định danh để tra cứu!</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="status-msg loading">Đang lấy bảng điểm, vui lòng đợi...</div>';
+
+            fetch(`${SCRIPT_URL}?id=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.error) {
+                        statusDiv.innerHTML = `<div class="status-msg error">${result.error}</div>`;
+                        return;
+                    }
+
+                    // Xóa thông báo trạng thái khi có kết quả hợp lệ
+                    statusDiv.innerHTML = "";
+
+                    // Tạo giao diện dạng danh sách dọc (Card)
+                    const studentData = result.data;
+                    const keys = Object.keys(studentData);
+                    
+                    let cardHtml = '';
+                    keys.forEach(key => {
+                        cardHtml += `
+                            <div class="info-row">
+                                <span class="info-label">${key}</span>
+                                <span class="info-value">${studentData[key]}</span>
+                            </div>
+                        `;
+                    });
+
+                    cardDiv.innerHTML = cardHtml;
+                    cardDiv.style.display = "block"; // Hiển thị thẻ điểm
+                    
+                    // Cuộn màn hình xuống kết quả tự động trên điện thoại
+                    cardDiv.scrollIntoView({ behavior: 'smooth' });
+                })
+                .catch(error => {
+                    statusDiv.innerHTML = '<div class="status-msg error">Có lỗi khi kết nối đến hệ thống máy chủ.</div>';
+                    console.error(error);
+                });
+        }
+    </script>
+</body>
+</html>
