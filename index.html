@@ -9,24 +9,60 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 15px; background-color: #f4f6f9; color: #333; }
         .container { max-width: 600px; margin: 0 auto; }
         h2 { color: #0056b3; text-align: center; font-size: 22px; margin-top: 10px; margin-bottom: 20px; }
-		h1 { color: #0056b3; text-align: center; font-size: 30px; margin-top: 15px; margin-bottom: 25px; }
+		h1 { color: #0056b3; text-align: center; font-size: 24px; margin-top: 15px; margin-bottom: 25px; }
         
         /* Khung tìm kiếm */
-        .search-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .search-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
         #searchInput { width: 100%; padding: 12px 15px; font-size: 16px; border: 2px solid #007bff; border-radius: 8px; outline: none; -webkit-appearance: none; }
         .search-container button { width: 100%; padding: 12px; font-size: 16px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
         .search-container button:hover { background-color: #0056b3; }
         
-        /* Hiển thị kết quả dạng Thẻ (Card) tối ưu cho Mobile */
-        .result-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); padding: 15px; margin-top: 15px; display: none; border-top: 4px solid #007bff; }
-        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 15px; }
-        .info-row:last-child { border-bottom: none; }
+        /* Hiển thị kết quả dạng Thẻ (Card) */
+        .result-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); padding: 25px 15px 15px 15px; margin-top: 15px; display: none; }
+        
+        /* 📦 ĐƯỜNG VIỀN BAO CHUNG TỪNG NHÓM CÓ TIÊU ĐỀ NẰM ĐÈ */
+        .info-group {
+            position: relative; /* Để định vị tiêu đề con nằm đè lên */
+            border: 1px solid #dcdcdc;
+            border-radius: 10px;
+            background-color: #fafafa;
+            padding: 10px 15px 5px 15px;
+            margin-bottom: 25px;
+            margin-top: 15px;
+        }
+        .info-group:last-child { margin-bottom: 0; }
+        
+        /* 🏷️ CHỮ TIÊU ĐỀ ĐÈ LÊN ĐƯỜNG VIỀN */
+        .group-title {
+            position: absolute;
+            top: -11px; /* Đẩy chữ lên đè viền */
+            left: 15px;
+            background-color: #fff; /* Nền trắng đè lên nét viền */
+            padding: 0 8px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Các dòng thông tin bên trong nhóm */
+        .info-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 0; 
+            border-bottom: 1px dashed #e0e0e0; 
+            font-size: 15px; 
+        }
+        .info-row:last-child { border-bottom: none; } 
+        
         .info-label { font-weight: 600; color: #555; text-align: left; padding-right: 10px; }
         .info-value { font-weight: bold; color: #000; text-align: right; }
         
-        /* Đổi màu nổi bật cho các dòng điểm số chính */
-        .info-row:nth-child(1) .info-value, .info-row:nth-child(2) .info-value { color: #0056b3; } /* Tên và lớp màu xanh */
-        .info-row:last-child .info-value { color: #dc3545; font-size: 18px; } /* Điểm trung bình màu đỏ to hơn */
+        /* Các class màu sắc động */
+        .highlight-blue { color: #0056b3 !important; }
+        .highlight-red { color: #dc3545 !important; font-size: 18px; }
 
         /* Trạng thái */
         .status-msg { text-align: center; font-size: 15px; margin-top: 20px; font-weight: bold; padding: 10px; border-radius: 8px; }
@@ -37,15 +73,16 @@
         @media (min-width: 480px) {
             .search-container { flex-direction: row; }
             .search-container button { width: auto; min-width: 120px; }
+            h1 { font-size: 28px; }
             h2 { font-size: 26px; }
-            .result-card { padding: 20px; }
+            .result-card { padding: 30px 20px 20px 20px; }
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-		<h1>TRƯỜNG THCS TRẦN BÌNH TRỌNG - PHƯỜNG HÒA THÀNH</h1>
+		<h1>TRƯỜNG THCS TRẦN BÌNH TRỌNG<br>PHƯỜNG HÒA THÀNH</h1>
         <h2>🔍 HỆ THỐNG TRA CỨU ĐIỂM</h2>
         
         <div class="search-container">
@@ -85,27 +122,75 @@
                         return;
                     }
 
-                    // Xóa thông báo trạng thái khi có kết quả hợp lệ
                     statusDiv.innerHTML = "";
 
-                    // Tạo giao diện dạng danh sách dọc (Card)
                     const studentData = result.data;
                     const keys = Object.keys(studentData);
                     
-                    let cardHtml = '';
+                    let profileHtml = ''; // Chứa nhóm thông tin học sinh
+                    let subjectsHtml = ''; // Chứa nhóm danh sách môn học
+
                     keys.forEach(key => {
-                        cardHtml += `
+                        let valueClass = '';
+                        const cleanKey = key.trim().toLowerCase();
+
+                        // Bộ lọc từ khóa thông tin cá nhân nâng cấp
+                        const isProfileKey = cleanKey.includes("họ tên") || 
+                                             cleanKey.includes("họ và tên") || 
+                                             cleanKey.includes("tên") || 
+                                             cleanKey.includes("lớp") || 
+                                             cleanKey.includes("mã") || 
+                                             cleanKey.includes("id") || 
+                                             cleanKey.includes("sinh") || 
+                                             cleanKey.includes("ngày sinh");
+
+                        // Bộ lọc từ khóa điểm trung bình
+                        const isTotalScoreKey = cleanKey.includes("trung bình") || 
+                                                cleanKey.includes("tbm") || 
+                                                cleanKey.includes("đtb");
+
+                        // Kiểm tra để gán class màu sắc trước khi chèn vào chuỗi
+                        if (isProfileKey) {
+                            valueClass = 'highlight-blue';
+                        } else if (isTotalScoreKey) {
+                            valueClass = 'highlight-red';
+                        }
+
+                        // Tạo chuỗi HTML hoàn chỉnh cho dòng hiện tại
+                        const rowHtml = `
                             <div class="info-row">
                                 <span class="info-label">${key}</span>
-                                <span class="info-value">${studentData[key]}</span>
+                                <span class="info-value ${valueClass}">${studentData[key]}</span>
                             </div>
                         `;
+
+                        // Đẩy dòng vào nhóm tương ứng dựa theo từ khóa
+                        if (isProfileKey) {
+                            profileHtml += rowHtml;
+                        } else {
+                            subjectsHtml += rowHtml;
+                        }
                     });
 
-                    cardDiv.innerHTML = cardHtml;
-                    cardDiv.style.display = "block"; // Hiển thị thẻ điểm
-                    
-                    // Cuộn màn hình xuống kết quả tự động trên điện thoại
+                    // Đóng gói các dòng vào khung viền nhóm kèm dòng tiêu đề đè viền
+                    let finalHtml = '';
+                    if (profileHtml) {
+                        finalHtml += `
+                            <div class="info-group">
+                                <span class="group-title">Thông tin cá nhân</span>
+                                ${profileHtml}
+                            </div>`;
+                    }
+                    if (subjectsHtml) {
+                        finalHtml += `
+                            <div class="info-group">
+                                <span class="group-title">Kết quả môn học</span>
+                                ${subjectsHtml}
+                            </div>`;
+                    }
+
+                    cardDiv.innerHTML = finalHtml;
+                    cardDiv.style.display = "block";
                     cardDiv.scrollIntoView({ behavior: 'smooth' });
                 })
                 .catch(error => {
